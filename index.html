@@ -991,24 +991,26 @@
 
           let bedsHtml = '';
           if (r.beds > 0) {
-            for (let b = 1; b <= r.beds; b++) {
-              const m = members.find((x) => x.bed === b);
-              if (m) {
-                const st = STATUS_MAP[m.status] || STATUS_MAP['入住'];
-                bedsHtml += `<div class="bed" title="${m.name} | ${m.gender} ${m.age}岁 | ${m.status}${m.note ? ' | ' + m.note : ''}">
+            // 按该房间实际成员床位号排序展示（支持全局编号或房间内编号两种格式）
+            const roomMembers = members.slice().sort((a, b) => a.bed - b.bed);
+            // 先展示所有有成员的床位（用成员的实际床位号）
+            roomMembers.forEach((m) => {
+              const st = STATUS_MAP[m.status] || STATUS_MAP['入住'];
+              bedsHtml += `<div class="bed" title="${m.name} | ${m.gender} ${m.age}岁 | ${m.status}${m.note ? ' | ' + m.note : ''}">
             <span class="dot ${st.cls}"></span>
-            <span class="bno">${b}床</span>
+            <span class="bno">${m.bed}床</span>
             <span class="bname">${m.name}</span>
             <span class="bst">${m.status}</span>
           </div>`;
-              } else {
-                bedsHtml += `<div class="bed" title="空闲床位">
+            });
+            // 再按 r.beds 补足空闲床位（数量 = 床位数 - 实际成员数）
+            const freeCount = Math.max(0, r.beds - roomMembers.length);
+            for (let i = 0; i < freeCount; i++) {
+              bedsHtml += `<div class="bed" title="空闲床位">
             <span class="dot free"></span>
-            <span class="bno">${b}床</span>
-            <span class="bname" style="color:var(--text-muted)">空闲</span>
+            <span class="bname" style="color:var(--text-muted)">空闲床位</span>
             <span class="bst">空闲</span>
           </div>`;
-              }
             }
           } else {
             bedsHtml = `<div class="bed" style="color:var(--text-muted)"><span class="bname">无床位</span></div>`;
