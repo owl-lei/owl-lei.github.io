@@ -1,71 +1,1113 @@
-<!DOCTYPE html>
-<html lang="en-US">
+<!doctype html>
+<html lang="zh-CN">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>雷厉风行</title>
-    <meta name="generator" content="VuePress 1.9.9">
-    <link rel="icon" href="/favicon.ico">
-    <meta name="description" content="个人博客，记录点滴">
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-    
-    <link rel="preload" href="/assets/css/0.styles.e853742c.css" as="style"><link rel="preload" href="/assets/js/app.de8f9924.js" as="script"><link rel="preload" href="/assets/js/3.69cd165e.js" as="script"><link rel="preload" href="/assets/js/1.98e71d3a.js" as="script"><link rel="preload" href="/assets/js/17.970b3446.js" as="script"><link rel="prefetch" href="/assets/js/10.4fc4d22a.js"><link rel="prefetch" href="/assets/js/11.e67fdc2d.js"><link rel="prefetch" href="/assets/js/12.bbd152cd.js"><link rel="prefetch" href="/assets/js/13.babf26f0.js"><link rel="prefetch" href="/assets/js/14.c48404c6.js"><link rel="prefetch" href="/assets/js/15.39666d27.js"><link rel="prefetch" href="/assets/js/16.11e62727.js"><link rel="prefetch" href="/assets/js/18.850c4efd.js"><link rel="prefetch" href="/assets/js/19.80850eae.js"><link rel="prefetch" href="/assets/js/4.16023958.js"><link rel="prefetch" href="/assets/js/5.60a6e1bd.js"><link rel="prefetch" href="/assets/js/6.f9baff55.js"><link rel="prefetch" href="/assets/js/7.2860a8a9.js"><link rel="prefetch" href="/assets/js/8.6f86de97.js"><link rel="prefetch" href="/assets/js/9.9ed97ef9.js">
-    <link rel="stylesheet" href="/assets/css/0.styles.e853742c.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>阳春市福颐康乐养老中心床位智慧大屏</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+      :root {
+        --bg-0: #050b1a;
+        --bg-1: #0a1428;
+        --bg-2: #0f1f3d;
+        --panel: rgba(16, 34, 64, 0.72);
+        --panel-solid: #0c1b36;
+        --border: rgba(64, 158, 255, 0.35);
+        --border-soft: rgba(64, 158, 255, 0.18);
+        --cyan: #00e5ff;
+        --cyan-dim: #2bb8ff;
+        --blue: #3a9bff;
+        --text: #d6e6ff;
+        --text-dim: #7d93b8;
+        --text-muted: #5a7099;
+
+        --st-occupied: #00e676;
+        --st-free: #607d8b;
+        --st-hospital: #ff6d00;
+        --st-leave: #448aff;
+        --st-empty: #2a3a55;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        height: 100%;
+        font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+        background: var(--bg-0);
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      body {
+        background:
+          radial-gradient(ellipse at 20% 0%, rgba(0, 120, 255, 0.12), transparent 50%),
+          radial-gradient(ellipse at 80% 100%, rgba(0, 229, 255, 0.1), transparent 50%),
+          linear-gradient(180deg, #050b1a 0%, #070f22 100%);
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(64, 158, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(64, 158, 255, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .app {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 14px 20px 18px;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--cyan), var(--blue));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: bold;
+        color: #03122e;
+        box-shadow: 0 0 18px rgba(0, 229, 255, 0.5);
+      }
+      .title {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: 4px;
+        background: linear-gradient(90deg, #fff, var(--cyan));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .subtitle {
+        font-size: 12px;
+        color: var(--text-dim);
+        letter-spacing: 2px;
+        margin-top: 2px;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+      .clock {
+        font-size: 14px;
+        color: var(--cyan);
+        font-family: 'Courier New', monospace;
+        text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+      }
+      .file-btn {
+        background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(58, 155, 255, 0.15));
+        border: 1px solid var(--border);
+        color: var(--cyan);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+      }
+      .file-btn:hover {
+        background: rgba(0, 229, 255, 0.25);
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+      }
+      .file-btn input {
+        display: none;
+      }
+
+      /* ===== Stats bar (全表汇总) ===== */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+        padding: 14px 0;
+      }
+      .stat-card {
+        background: var(--panel);
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--cyan);
+      }
+      .stat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .stat-info .stat-val {
+        font-size: 22px;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+      }
+      .stat-info .stat-label {
+        font-size: 12px;
+        color: var(--text-dim);
+        margin-top: 1px;
+        letter-spacing: 1px;
+      }
+
+      .main {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      .floor-section {
+        display: flex;
+        flex-direction: column;
+        background: var(--panel);
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .floor-tabs {
+        display: flex;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        background: rgba(5, 11, 26, 0.5);
+        flex-wrap: wrap;
+      }
+      .floor-tab {
+        padding: 7px 18px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        letter-spacing: 1px;
+        border: 1px solid var(--border-soft);
+        background: rgba(15, 31, 61, 0.6);
+        color: var(--text-dim);
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .floor-tab:hover {
+        color: var(--cyan);
+        border-color: var(--border);
+      }
+      .floor-tab.active {
+        background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(58, 155, 255, 0.15));
+        color: #fff;
+        border-color: var(--cyan);
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+      }
+      .floor-tab .tab-name {
+        font-weight: 600;
+      }
+      .floor-tab .tab-desc {
+        font-size: 11px;
+        color: var(--text-muted);
+        opacity: 0.8;
+      }
+
+      .floor-canvas-wrap {
+        flex: 1;
+        overflow: auto;
+        padding: 18px;
+        background:
+          linear-gradient(rgba(64, 158, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(64, 158, 255, 0.04) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+      /* v3: 自适应网格，寝室自动排列，固定最小宽度保证文字完整显示 */
+      .floor-canvas {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 10px;
+        align-content: start;
+      }
+
+      .room {
+        background: rgba(12, 27, 54, 0.85);
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        min-height: 70px;
+        transition: all 0.15s;
+        position: relative;
+      }
+      .room:hover {
+        border-color: var(--cyan);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0, 229, 255, 0.2);
+        z-index: 2;
+      }
+      .room-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .rname {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--cyan);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .rcount {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-family: 'Courier New', monospace;
+        flex-shrink: 0;
+      }
+      .rnurse {
+        flex-shrink: 1;
+        min-width: 0;
+        font-size: 11px;
+        color: #ffe082;
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        padding: 1px 8px;
+        border-radius: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .rnurse.none {
+        color: var(--text-muted);
+        background: rgba(96, 125, 139, 0.1);
+        border-color: rgba(96, 125, 139, 0.3);
+      }
+      .rnurse.none::before {
+        display: none;
+      }
+
+      /* 护理人员筛选条（楼层平面图上方） */
+      .nurse-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-soft);
+        background: rgba(5, 11, 26, 0.5);
+        flex-shrink: 0;
+      }
+      .nurse-bar-label {
+        font-size: 12px;
+        color: var(--text-dim);
+        letter-spacing: 1px;
+        margin-right: 2px;
+      }
+      .nurse-chip {
+        padding: 4px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        font-size: 12px;
+        letter-spacing: 0;
+        border: 1px solid var(--border-soft);
+        background: rgba(15, 31, 61, 0.6);
+        color: var(--text-dim);
+        transition: all 0.15s;
+        white-space: nowrap;
+      }
+      .nurse-chip:hover {
+        color: #ffe082;
+        border-color: rgba(255, 193, 7, 0.5);
+      }
+      .nurse-chip.active {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.22), rgba(255, 152, 0, 0.14));
+        color: #ffe082;
+        border-color: #ffc107;
+        box-shadow: 0 0 10px rgba(255, 193, 7, 0.25);
+      }
+
+      /* 右侧：护理人员看护统计 */
+      .nurse-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .nurse-stat-item .ns-name {
+        flex: 1;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .nurse-stat-item .ns-name.ns-name-muted {
+        color: var(--text-dim);
+      }
+      .nurse-stat-item .ns-val {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        color: #ffd54f;
+      }
+      .nurse-stat-item .ns-unit {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-left: 2px;
+        font-weight: 400;
+      }
+      .beds {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 4px;
+        flex: 1;
+      }
+      .bed {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text);
+        background: rgba(5, 11, 26, 0.5);
+        border-radius: 4px;
+        padding: 4px 8px;
+        line-height: 1.5;
+        white-space: nowrap;
+      }
+      .bed .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        box-shadow: 0 0 6px currentColor;
+      }
+      .bed .bno {
+        color: var(--text-muted);
+        font-family: monospace;
+        font-size: 11px;
+        flex-shrink: 0;
+      }
+      .bed .bname {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+      }
+      .bed .bst {
+        font-size: 10px;
+        color: var(--text-muted);
+        flex-shrink: 0;
+      }
+
+      .dot.occupied {
+        background: var(--st-occupied);
+        color: var(--st-occupied);
+      }
+      .dot.free {
+        background: var(--st-free);
+        color: var(--st-free);
+      }
+      .dot.hospital {
+        background: var(--st-hospital);
+        color: var(--st-hospital);
+      }
+      .dot.leave {
+        background: var(--st-leave);
+        color: var(--st-leave);
+      }
+
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border-soft);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .panel-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--cyan);
+        margin-bottom: 12px;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .panel-title::before {
+        content: '';
+        width: 3px;
+        height: 14px;
+        background: var(--cyan);
+        border-radius: 2px;
+      }
+      .panel-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-left: auto;
+        letter-spacing: 0;
+      }
+
+      .legend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .legend-item .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        box-shadow: 0 0 6px currentColor;
+      }
+      .legend-item .lg-name {
+        flex: 1;
+        color: var(--text);
+      }
+      .legend-item .lg-count {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+      }
+
+      .floor-stat-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .floor-stat-item .fs-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .floor-stat-item .fs-name {
+        flex: 1;
+        color: var(--text);
+      }
+      .floor-stat-item .fs-val {
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .status-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(5, 11, 26, 0.6);
+        overflow: hidden;
+        margin-top: 6px;
+        display: flex;
+      }
+      .status-bar > div {
+        height: 100%;
+        transition: width 0.4s;
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(5, 11, 26, 0.4);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--cyan);
+      }
+
+      .empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--text-muted);
+        font-size: 14px;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(12, 27, 54, 0.95);
+        border: 1px solid var(--cyan);
+        color: var(--cyan);
+        padding: 10px 20px;
+        border-radius: 6px;
+        z-index: 100;
+        font-size: 13px;
+        box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+
+      @media (max-width: 1100px) {
+        .main {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app" data-server-rendered="true"><div class="theme-container no-sidebar" data-v-7dd95ae2><div data-v-7dd95ae2><div class="password-shadow password-wrapper-out" style="display:none;" data-v-59e6cb88 data-v-7dd95ae2 data-v-7dd95ae2><h3 class="title" data-v-59e6cb88>雷厉风行</h3> <p class="description" data-v-59e6cb88>个人博客，记录点滴</p> <label id="box" class="inputBox" data-v-59e6cb88><input type="password" value="" data-v-59e6cb88> <span data-v-59e6cb88>Konck! Knock!</span> <button data-v-59e6cb88>OK</button></label> <div class="footer" data-v-59e6cb88><span data-v-59e6cb88><i class="iconfont reco-theme" data-v-59e6cb88></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-59e6cb88>vuePress-theme-reco</a></span> <span data-v-59e6cb88><i class="iconfont reco-copyright" data-v-59e6cb88></i> <a data-v-59e6cb88><span data-v-59e6cb88>曾凡磊</span>
-          
-        <span data-v-59e6cb88>2021 - </span>
-        2023
-      </a></span></div></div> <div class="hide" data-v-7dd95ae2><header class="navbar" data-v-7dd95ae2><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" aria-current="page" class="home-link router-link-exact-active router-link-active"><img src="/logo.png" alt="雷厉风行" class="logo"> <span class="site-name">雷厉风行</span></a> <div class="links"><div class="color-picker"><a class="color-button"><i class="iconfont reco-color"></i></a> <div class="color-picker-menu" style="display:none;"><div class="mode-options"><h4 class="title">Choose mode</h4> <ul class="color-mode-options"><li class="dark">dark</li><li class="auto active">auto</li><li class="light">light</li></ul></div></div></div> <div class="search-box"><i class="iconfont reco-search"></i> <input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/" aria-current="page" class="nav-link router-link-exact-active router-link-active"><i class="iconfont reco-home"></i>
-  Home
-</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-category"></i>
-      Category
-    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/categories/JavaScript/" class="nav-link"><i class="undefined"></i>
-  JavaScript
-</a></li><li class="dropdown-item"><!----> <a href="/categories/docker/" class="nav-link"><i class="undefined"></i>
-  docker
-</a></li><li class="dropdown-item"><!----> <a href="/categories/food/" class="nav-link"><i class="undefined"></i>
-  food
-</a></li></ul></div></div><div class="nav-item"><a href="/tag/" class="nav-link"><i class="iconfont reco-tag"></i>
-  Tag
-</a></div><div class="nav-item"><a href="/timeline/" class="nav-link"><i class="iconfont reco-date"></i>
-  TimeLine
-</a></div><div class="nav-item"><a href="https://github.com/owl-lei" target="_blank" rel="noopener noreferrer" class="nav-link external"><i class="iconfont reco-github"></i>
-  GitHub
-  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav></div></header> <div class="sidebar-mask" data-v-7dd95ae2></div> <aside class="sidebar" data-v-7dd95ae2><div class="personal-info-wrapper" data-v-1fad0c41 data-v-7dd95ae2><img src="/avatar.jpg" alt="author-avatar" class="personal-img" data-v-1fad0c41> <h3 class="name" data-v-1fad0c41>
-    曾凡磊
-  </h3> <div class="num" data-v-1fad0c41><div data-v-1fad0c41><h3 data-v-1fad0c41>9</h3> <h6 data-v-1fad0c41>Articles</h6></div> <div data-v-1fad0c41><h3 data-v-1fad0c41>12</h3> <h6 data-v-1fad0c41>Tags</h6></div></div> <ul class="social-links" data-v-1fad0c41></ul> <hr data-v-1fad0c41></div> <nav class="nav-links"><div class="nav-item"><a href="/" aria-current="page" class="nav-link router-link-exact-active router-link-active"><i class="iconfont reco-home"></i>
-  Home
-</a></div><div class="nav-item"><div class="dropdown-wrapper"><a class="dropdown-title"><span class="title"><i class="iconfont reco-category"></i>
-      Category
-    </span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/categories/JavaScript/" class="nav-link"><i class="undefined"></i>
-  JavaScript
-</a></li><li class="dropdown-item"><!----> <a href="/categories/docker/" class="nav-link"><i class="undefined"></i>
-  docker
-</a></li><li class="dropdown-item"><!----> <a href="/categories/food/" class="nav-link"><i class="undefined"></i>
-  food
-</a></li></ul></div></div><div class="nav-item"><a href="/tag/" class="nav-link"><i class="iconfont reco-tag"></i>
-  Tag
-</a></div><div class="nav-item"><a href="/timeline/" class="nav-link"><i class="iconfont reco-date"></i>
-  TimeLine
-</a></div><div class="nav-item"><a href="https://github.com/owl-lei" target="_blank" rel="noopener noreferrer" class="nav-link external"><i class="iconfont reco-github"></i>
-  GitHub
-  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav> <!----> </aside> <div class="password-shadow password-wrapper-in" style="display:none;" data-v-59e6cb88 data-v-7dd95ae2><h3 class="title" data-v-59e6cb88></h3> <!----> <label id="box" class="inputBox" data-v-59e6cb88><input type="password" value="" data-v-59e6cb88> <span data-v-59e6cb88>Konck! Knock!</span> <button data-v-59e6cb88>OK</button></label> <div class="footer" data-v-59e6cb88><span data-v-59e6cb88><i class="iconfont reco-theme" data-v-59e6cb88></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-59e6cb88>vuePress-theme-reco</a></span> <span data-v-59e6cb88><i class="iconfont reco-copyright" data-v-59e6cb88></i> <a data-v-59e6cb88><span data-v-59e6cb88>曾凡磊</span>
-          
-        <span data-v-59e6cb88>2021 - </span>
-        2023
-      </a></span></div></div> <div data-v-7dd95ae2><div class="home-blog"><div class="hero" style="text-align:center;overflow:hidden;background:url(bg.jpg) center/cover no-repeat;height:680px;"><div><!----> <h1>
-          雷厉风行
-        </h1> <p class="description">
-          个人博客，记录点滴
-        </p></div></div> <div class="home-blog-wrapper"><div class="blog-list"><div class="abstract-wrapper" data-v-21a20f36><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/JavaScript/2023/0720.html" data-v-73a63558>rollup打包工具库</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>7/20/2023</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>js</span><span class="tag-item" data-v-8a445198>rollup</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/docker/0720.html" data-v-73a63558>verdaccio搭建私有库</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>7/20/2023</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>docker</span><span class="tag-item" data-v-8a445198>verdaccio</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/food/2021/1220.html" data-v-73a63558>番茄牛腩煲</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>12/20/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>美食</span><span class="tag-item" data-v-8a445198>牛</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/food/2021/0912.html" data-v-73a63558>花螺鸡煲</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>9/12/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>美食</span><span class="tag-item" data-v-8a445198>鸡</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/food/2021/0814.html" data-v-73a63558>复刻周黑鸭</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>8/14/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>美食</span><span class="tag-item" data-v-8a445198>鸭</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/food/2021/0808.html" data-v-73a63558>爆炒花甲</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>8/8/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>美食</span><span class="tag-item" data-v-8a445198>海鲜</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/food/2021/0822.html" data-v-73a63558>啫啫粉肠</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>8/8/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>美食</span><span class="tag-item" data-v-8a445198>猪</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/food/2021/0110.html" data-v-73a63558>红烧羊肉煲</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>1/10/2021</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>美食</span><span class="tag-item" data-v-8a445198>羊</span></i></div></div><div class="abstract-item" data-v-73a63558 data-v-21a20f36><!----> <div class="title" data-v-73a63558><!----> <a href="/blogs/JavaScript/2020/0412-00.html" data-v-73a63558>electron-vue升级至8.2.1及配置多页面构建</a></div> <div class="abstract" data-v-73a63558></div> <div data-v-8a445198 data-v-73a63558><i class="iconfont reco-account" data-v-8a445198><span data-v-8a445198>曾凡磊</span></i> <i class="iconfont reco-date" data-v-8a445198><span data-v-8a445198>4/12/2020</span></i> <!----> <i class="tags iconfont reco-tag" data-v-8a445198><span class="tag-item" data-v-8a445198>js</span><span class="tag-item" data-v-8a445198>electron</span></i></div></div> <div class="pagation pagation" style="display:none;" data-v-22b6649c data-v-21a20f36><div class="pagation-list" data-v-22b6649c><span unselectable="on" class="jump" style="display:none;" data-v-22b6649c>Prev</span> <!----> <!----> <span class="jump bgprimary" data-v-22b6649c>1</span> <!----> <!----> <!----> <span class="jumppoint" data-v-22b6649c>Jump To</span> <span class="jumpinp" data-v-22b6649c><input type="text" value="" data-v-22b6649c></span> <span class="jump gobtn" data-v-22b6649c>Go</span></div></div></div></div> <div class="info-wrapper"><div class="personal-info-wrapper" data-v-1fad0c41><img src="/avatar.jpg" alt="author-avatar" class="personal-img" data-v-1fad0c41> <h3 class="name" data-v-1fad0c41>
-    曾凡磊
-  </h3> <div class="num" data-v-1fad0c41><div data-v-1fad0c41><h3 data-v-1fad0c41>9</h3> <h6 data-v-1fad0c41>Articles</h6></div> <div data-v-1fad0c41><h3 data-v-1fad0c41>12</h3> <h6 data-v-1fad0c41>Tags</h6></div></div> <ul class="social-links" data-v-1fad0c41></ul> <hr data-v-1fad0c41></div> <h4><i class="iconfont reco-category"></i> Categories</h4> <ul class="category-wrapper"><li class="category-item"><a href="/categories/JavaScript/"><span class="category-name">JavaScript</span> <span class="post-num" style="background-color:#fb9b5f;">2</span></a></li><li class="category-item"><a href="/categories/docker/"><span class="category-name">docker</span> <span class="post-num" style="background-color:#f47e60;">1</span></a></li><li class="category-item"><a href="/categories/food/"><span class="category-name">food</span> <span class="post-num" style="background-color:#abbd81;">6</span></a></li></ul> <hr> <h4><i class="iconfont reco-tag"></i> Tags</h4> <div class="tags" data-v-cbf58c6c><span style="background-color:#fb9b5f;display:;" data-v-cbf58c6c>All</span><span style="background-color:#f8b26a;display:;" data-v-cbf58c6c>js</span><span style="background-color:#e15b64;display:;" data-v-cbf58c6c>electron</span><span style="background-color:#f26d6d;display:;" data-v-cbf58c6c>rollup</span><span style="background-color:#fb9b5f;display:;" data-v-cbf58c6c>docker</span><span style="background-color:#f47e60;display:;" data-v-cbf58c6c>verdaccio</span><span style="background-color:#e15b64;display:;" data-v-cbf58c6c>美食</span><span style="background-color:#67cc86;display:;" data-v-cbf58c6c>羊</span><span style="background-color:#849b87;display:;" data-v-cbf58c6c>海鲜</span><span style="background-color:#fb9b5f;display:;" data-v-cbf58c6c>鸭</span><span style="background-color:#f26d6d;display:;" data-v-cbf58c6c>猪</span><span style="background-color:#67cc86;display:;" data-v-cbf58c6c>鸡</span><span style="background-color:#3498db;display:;" data-v-cbf58c6c>牛</span></div> <!----> <div class="friend-link-wrapper" data-v-120fcf04></div></div></div> <div custom="" class="home-center content__default"></div></div> <div class="footer-wrapper footer" data-v-29dae040><span data-v-29dae040><i class="iconfont reco-theme" data-v-29dae040></i> <a target="blank" href="https://vuepress-theme-reco.recoluan.com" data-v-29dae040>vuepress-theme-reco@1.6.17</a></span> <span data-v-29dae040><i class="iconfont reco-beian" data-v-29dae040></i> <a href="https://beian.miit.gov.cn/#/Integrated/index" data-v-29dae040>粤ICP备19079563号-1</a></span> <span data-v-29dae040><i class="iconfont reco-copyright" data-v-29dae040></i> <a data-v-29dae040><span data-v-29dae040>曾凡磊</span>
-        
-      <span data-v-29dae040>2021 - </span>
-      2023
-    </a></span> <span style="display:none;" data-v-29dae040><i class="iconfont reco-eye" data-v-29dae040></i> <span id="/" data-flag-title="Your Article Title" class="leancloud-visitors" data-v-29dae040><a class="leancloud-visitors-count"></a></span></span> <!----> <div class="comments-wrapper" style="display:none;" data-v-29dae040><!----></div></div></div> <ul class="sub-sidebar sub-sidebar-wrapper" style="width:0;" data-v-b57cc07c data-v-7dd95ae2></ul></div></div></div><div class="global-ui"><div class="back-to-ceiling" style="right:1rem;bottom:6rem;width:2.5rem;height:2.5rem;border-radius:.25rem;line-height:2.5rem;display:none;" data-v-c6073ba8 data-v-c6073ba8><svg t="1574745035067" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5404" class="icon" data-v-c6073ba8><path d="M526.60727968 10.90185116a27.675 27.675 0 0 0-29.21455937 0c-131.36607665 82.28402758-218.69155461 228.01873535-218.69155402 394.07834331a462.20625001 462.20625001 0 0 0 5.36959153 69.94390903c1.00431239 6.55289093-0.34802892 13.13561351-3.76865779 18.80351572-32.63518765 54.11355614-51.75690182 118.55860487-51.7569018 187.94566865a371.06718723 371.06718723 0 0 0 11.50484808 91.98906777c6.53300375 25.50556257 41.68394495 28.14064038 52.69160883 4.22606766 17.37162448-37.73630017 42.14135425-72.50938081 72.80769204-103.21549295 2.18761121 3.04276886 4.15646224 6.24463696 6.40373557 9.22774369a1871.4375 1871.4375 0 0 0 140.04691725 5.34970492 1866.36093723 1866.36093723 0 0 0 140.04691723-5.34970492c2.24727335-2.98310674 4.21612437-6.18497483 6.3937923-9.2178004 30.66633723 30.70611158 55.4360664 65.4791928 72.80769147 103.21549355 11.00766384 23.91457269 46.15860503 21.27949489 52.69160879-4.22606768a371.15156223 371.15156223 0 0 0 11.514792-91.99901164c0-69.36717486-19.13165746-133.82216804-51.75690182-187.92578088-3.42062944-5.66790279-4.76302748-12.26056868-3.76865837-18.80351632a462.20625001 462.20625001 0 0 0 5.36959269-69.943909c-0.00994388-166.08943902-87.32547796-311.81420293-218.6915546-394.09823051zM605.93803103 357.87693858a93.93749974 93.93749974 0 1 1-187.89594924 6.1e-7 93.93749974 93.93749974 0 0 1 187.89594924-6.1e-7z" p-id="5405" data-v-c6073ba8></path><path d="M429.50777625 765.63860547C429.50777625 803.39355007 466.44236686 1000.39046097 512.00932183 1000.39046097c45.56695499 0 82.4922232-197.00623328 82.5015456-234.7518555 0-37.75494459-36.9345906-68.35043303-82.4922232-68.34111062-45.57627738-0.00932239-82.52019037 30.59548842-82.51086798 68.34111062z" p-id="5406" data-v-c6073ba8></path></svg></div></div></div>
-    <script src="/assets/js/app.de8f9924.js" defer></script><script src="/assets/js/3.69cd165e.js" defer></script><script src="/assets/js/1.98e71d3a.js" defer></script><script src="/assets/js/17.970b3446.js" defer></script>
+    <div class="app">
+      <div class="header">
+        <div class="title-wrap" id="titleArea" title="点击加载Excel数据" style="cursor: pointer">
+          <div class="logo">福</div>
+          <div>
+            <div class="title">阳春市福颐康乐养老中心床位智慧大屏</div>
+            <div class="subtitle">YANGCHUN FUYI KANGLE NURSING CENTER BED MONITORING</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="clock" id="clock">--:--:--</div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none" />
+        </div>
+      </div>
+
+      <!-- v3: 顶部统计为全表汇总（不随楼层切换变化） -->
+      <div class="stats" id="stats"></div>
+
+      <div class="main">
+        <div class="floor-section">
+          <div class="floor-tabs" id="floorTabs"></div>
+          <!-- 护理人员条件筛选（默认全部），位于楼层平面图上方 -->
+          <div class="nurse-bar" id="nurseBar"></div>
+          <div class="floor-canvas-wrap">
+            <div class="floor-canvas" id="floorCanvas"></div>
+          </div>
+        </div>
+
+        <div class="side">
+          <!-- v3: 当前楼层统计（寝室总数、床位总数），排版与状态分布一致 -->
+          <div class="panel">
+            <div class="panel-title">
+              楼层统计
+              <span class="panel-sub" id="floorStatSub">--</span>
+            </div>
+            <div class="legend-list" id="floorStatList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">
+              状态分布
+              <span class="panel-sub" id="statusSub">--</span>
+            </div>
+            <div class="legend-list" id="legendList"></div>
+            <div class="status-bar" id="statusBar"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">
+              护理人员看护统计
+              <span class="panel-sub" id="nurseStatSub">--</span>
+            </div>
+            <div class="legend-list" id="nurseStatList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      /* ============================================================
+       *  v3 数据模型
+       *  状态：入住 / 空闲 / 住院 / 请假
+       * ============================================================ */
+      const STATUS_CONFIG = [
+        { key: '入住', cls: 'occupied', color: '#00e676', label: '入住' },
+        { key: '空闲', cls: 'free', color: '#607d8b', label: '空闲' },
+        { key: '住院', cls: 'hospital', color: '#ff6d00', label: '住院' },
+        { key: '请假', cls: 'leave', color: '#448aff', label: '请假' },
+      ];
+      const STATUS_MAP = Object.fromEntries(STATUS_CONFIG.map((s) => [s.key, s]));
+
+      let DATA = { floors: [], rooms: [], members: [], nurses: [] };
+      let currentFloor = null;
+      let currentNurse = '__ALL__'; // 当前筛选的护理人员，__ALL__ 为全部
+
+      /* ============================================================
+       *  Clock
+       * ============================================================ */
+      function tickClock() {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        document.getElementById('clock').textContent =
+          `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+      setInterval(tickClock, 1000);
+      tickClock();
+
+      /* ============================================================
+       *  Toast
+       * ============================================================ */
+      let toastTimer;
+      function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+      }
+
+      /* ============================================================
+       *  Excel loading
+       *  方案二：通过 data.json 索引文件指向最新 xlsx，支持自动检测更新
+       * ============================================================ */
+      function parseWorkbook(wb) {
+        const getSheet = (name) => {
+          const sn = wb.SheetNames.find((n) => n === name);
+          if (!sn) return [];
+          return XLSX.utils.sheet_to_json(wb.Sheets[sn], { defval: '' });
+        };
+        const floors = getSheet('楼层')
+          .map((r) => ({
+            id: String(r['楼层编号'] ?? r['楼层'] ?? '').trim(),
+            name: String(r['楼层名称'] ?? r['名称'] ?? '').trim(),
+            desc: String(r['楼层说明'] ?? r['说明'] ?? '').trim(),
+          }))
+          .filter((f) => f.id);
+
+        const rooms = getSheet('寝室')
+          .map((r) => ({
+            floor: String(r['楼层'] ?? '').trim(),
+            no: String(r['寝室编号'] ?? r['房间号'] ?? '').trim(),
+            name: String(r['寝室名称'] ?? r['名称'] ?? r['寝室编号'] ?? '').trim(),
+            beds: Number(r['床位数'] ?? 0) || 0,
+            nurse: String(r['护理人员'] ?? '').trim(),
+          }))
+          .filter((r) => r.floor && r.no);
+
+        const nurses = getSheet('护理人员')
+          .map((r) => ({
+            id: String(r['工号'] ?? '').trim(),
+            name: String(r['姓名'] ?? '').trim(),
+            gender: String(r['性别'] ?? '').trim(),
+            phone: String(r['电话'] ?? '').trim(),
+            note: String(r['备注'] ?? '').trim(),
+          }))
+          .filter((n) => n.name);
+
+        const members = getSheet('成员')
+          .map((r) => ({
+            floor: String(r['楼层'] ?? '').trim(),
+            room: String(r['寝室编号'] ?? r['房间号'] ?? '').trim(),
+            bed: Number(r['床位号'] ?? r['床位'] ?? 0) || 0,
+            name: String(r['姓名'] ?? '').trim(),
+            gender: String(r['性别'] ?? '').trim(),
+            age: Number(r['年龄'] ?? 0) || 0,
+            status: String(r['状态'] ?? '入住').trim() || '入住',
+            note: String(r['备注'] ?? '').trim(),
+          }))
+          .filter((m) => m.floor && m.room && m.name);
+
+        return { floors, rooms, members, nurses };
+      }
+
+      function loadFromArrayBuffer(buf) {
+        const wb = XLSX.read(buf, { type: 'array' });
+        DATA = parseWorkbook(wb);
+        if (DATA.floors.length === 0) {
+          toast('未读取到楼层数据');
+          return;
+        }
+        currentFloor = DATA.floors[0].id;
+        currentNurse = '__ALL__';
+        render();
+        toast(`数据加载成功：${DATA.floors.length}层 / ${DATA.rooms.length}间 / ${DATA.members.length}人`);
+      }
+
+      /* ---- 方案二：data.json 索引 + 自动检测更新 ---- */
+      let currentDataFile = null; // 当前已加载的 xlsx 文件名
+      const POLL_INTERVAL = 60000; // 轮询间隔（60 秒）
+
+      // 带时间戳绕过浏览器缓存，确保每次都从服务器拿最新的 data.json
+      function fetchIndex() {
+        return fetch('data.json?t=' + Date.now()).then((r) => (r.ok ? r.json() : Promise.reject('index fetch failed')));
+      }
+
+      // 从 data.json 读取最新文件名并加载
+      function loadFromIndex() {
+        return fetchIndex().then((idx) => {
+          const file = String(idx.file || '').trim();
+          if (!file) throw new Error('data.json 中未指定 file 字段');
+          // 文件名未变化时跳过，避免重复加载
+          if (currentDataFile === file) return;
+
+          // 加载对应的 xlsx（加时间戳绕过缓存）
+          return fetch(file + '?t=' + Date.now())
+            .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject('xlsx fetch failed: ' + file)))
+            .then((buf) => {
+              loadFromArrayBuffer(buf);
+              currentDataFile = file;
+              if (idx.updated) {
+                console.log('[数据] 已加载:', file, '更新时间:', idx.updated);
+              }
+            });
+        });
+      }
+
+      // 定时轮询：发现 data.json 指向的文件变化则自动重新加载
+      // setInterval(() => {
+      //   fetchIndex()
+      //     .then(idx => {
+      //       const file = String(idx.file || '').trim();
+      //       if (file && file !== currentDataFile) {
+      //         toast('检测到数据更新，正在重新加载…');
+      //         loadFromIndex();
+      //       }
+      //     })
+      //     .catch(() => { /* 静默忽略轮询失败，等待下一次 */ });
+      // }, POLL_INTERVAL);
+
+      // 点击标题手动导入（兜底）
+      document.getElementById('titleArea').addEventListener('click', () => {
+        document.getElementById('fileInput').click();
+      });
+
+      document.getElementById('fileInput').addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => loadFromArrayBuffer(ev.target.result);
+        reader.readAsArrayBuffer(f);
+      });
+
+      // 启动：先读 data.json 索引，再加载对应 xlsx；失败则降级提示
+      loadFromIndex().catch(() => {
+        document.getElementById('floorCanvas').innerHTML = '<div class="empty">暂无数据</div>';
+      });
+
+      /* ============================================================
+       *  Rendering
+       * ============================================================ */
+      function getFloorRooms(floorId) {
+        return DATA.rooms.filter((r) => r.floor === floorId);
+      }
+      function getRoomMembers(floorId, roomNo) {
+        return DATA.members.filter((m) => m.floor === floorId && m.room === roomNo).sort((a, b) => a.bed - b.bed);
+      }
+      function getFloorMembers(floorId) {
+        return DATA.members.filter((m) => m.floor === floorId);
+      }
+
+      function renderFloorTabs() {
+        const box = document.getElementById('floorTabs');
+        box.innerHTML = '';
+        DATA.floors.forEach((f) => {
+          const tab = document.createElement('div');
+          tab.className = 'floor-tab' + (f.id === currentFloor ? ' active' : '');
+          tab.innerHTML = `<span class="tab-name">${f.name || f.id}</span><span class="tab-desc">${f.desc || ''}</span>`;
+          tab.onclick = () => {
+            currentFloor = f.id;
+            currentNurse = '__ALL__';
+            render();
+          };
+          box.appendChild(tab);
+        });
+      }
+
+      /* 当前楼层实际负责寝室的护理人员（按首次出现顺序去重） */
+      function getFloorNurses(floorId) {
+        const list = [];
+        getFloorRooms(floorId).forEach((r) => {
+          if (r.nurse && !list.includes(r.nurse)) list.push(r.nurse);
+        });
+        return list;
+      }
+
+      /* 寝室区下方：护理人员筛选条，默认「全部」 */
+      function renderNurseFilter() {
+        const box = document.getElementById('nurseBar');
+        const nurses = getFloorNurses(currentFloor);
+        // 当前选择的人已不在该楼层时，回退到全部
+        if (currentNurse !== '__ALL__' && !nurses.includes(currentNurse)) currentNurse = '__ALL__';
+
+        const chips = [{ v: '__ALL__', label: '全部' }, ...nurses.map((n) => ({ v: n, label: n }))];
+        box.innerHTML =
+          '<span class="nurse-bar-label">护理人员</span>' +
+          chips
+            .map(
+              (c) =>
+                `<span class="nurse-chip${currentNurse === c.v ? ' active' : ''}" data-nurse="${c.v}">${c.label}</span>`,
+            )
+            .join('');
+        box.querySelectorAll('.nurse-chip').forEach((chip) => {
+          chip.onclick = () => {
+            currentNurse = chip.dataset.nurse;
+            render();
+          };
+        });
+      }
+
+      /* v3: 顶部统计 = 全表汇总（所有楼层，不随楼层切换变化） */
+      function renderStats() {
+        const members = DATA.members;
+        const rooms = DATA.rooms;
+        const totalBeds = rooms.reduce((s, r) => s + r.beds, 0);
+
+        const counts = { 入住: 0, 空闲: 0, 住院: 0, 请假: 0 };
+        members.forEach((m) => {
+          if (counts[m.status] !== undefined) counts[m.status]++;
+        });
+        const freeBeds = Math.max(0, totalBeds - members.length);
+
+        const cards = [
+          { icon: '🏠', label: '寝室总数', val: rooms.length, color: '#3a9bff' },
+          { icon: '🛏️', label: '床位总数', val: totalBeds, color: '#00e5ff' },
+          { icon: '✅', label: '入住人数', val: counts['入住'], color: '#00e676' },
+          { icon: '⬜', label: '空闲床位', val: freeBeds, color: '#607d8b' },
+          { icon: '🏥', label: '住院人数', val: counts['住院'], color: '#ff6d00' },
+          { icon: '🏖️', label: '请假人数', val: counts['请假'], color: '#448aff' },
+        ];
+        const box = document.getElementById('stats');
+        box.innerHTML = cards
+          .map(
+            (c) => `
+    <div class="stat-card">
+      <div class="stat-icon" style="background:${c.color}22;color:${c.color}">${c.icon}</div>
+      <div class="stat-info">
+        <div class="stat-val" style="color:${c.color}">${c.val}</div>
+        <div class="stat-label">${c.label}</div>
+      </div>
+    </div>
+  `,
+          )
+          .join('');
+      }
+
+      /* v3: 当前楼层统计（寝室总数、床位总数），放右侧状态分布上方 */
+      function renderFloorStats() {
+        const rooms = getFloorRooms(currentFloor);
+        const totalBeds = rooms.reduce((s, r) => s + r.beds, 0);
+        const floor = DATA.floors.find((f) => f.id === currentFloor);
+        const sub = document.getElementById('floorStatSub');
+        if (sub) sub.textContent = floor ? floor.name || floor.id : '';
+
+        const items = [
+          { icon: '🏠', name: '寝室总数', val: rooms.length, color: '#3a9bff' },
+          { icon: '🛏️', name: '床位总数', val: totalBeds, color: '#00e5ff' },
+        ];
+        const list = document.getElementById('floorStatList');
+        list.innerHTML = items
+          .map(
+            (it) => `
+    <div class="floor-stat-item">
+      <div class="fs-icon" style="background:${it.color}22;color:${it.color}">${it.icon}</div>
+      <span class="fs-name">${it.name}</span>
+      <span class="fs-val" style="color:${it.color}">${it.val}</span>
+    </div>
+  `,
+          )
+          .join('');
+      }
+
+      /* v3: 寝室自适应排列 —— 不再使用 Excel 的行/列坐标，自动流式布局 */
+      function renderFloor() {
+        const canvas = document.getElementById('floorCanvas');
+        // 按当前护理人员筛选
+        let rooms = getFloorRooms(currentFloor);
+        if (currentNurse !== '__ALL__') rooms = rooms.filter((r) => r.nurse === currentNurse);
+
+        if (rooms.length === 0) {
+          canvas.innerHTML =
+            currentNurse !== '__ALL__'
+              ? `<div class="empty">护理人员「${currentNurse}」在当前楼层暂无负责寝室</div>`
+              : '<div class="empty">当前楼层暂无寝室数据</div>';
+          return;
+        }
+        // 自适应网格，无需设置行/列，由 CSS auto-fill 自动排列
+        canvas.style.gridTemplateColumns = '';
+
+        canvas.innerHTML = '';
+        rooms.forEach((r) => {
+          const members = getRoomMembers(currentFloor, r.no);
+          const occupied = members.length;
+          const el = document.createElement('div');
+          el.className = 'room';
+
+          let bedsHtml = '';
+          if (r.beds > 0) {
+            for (let b = 1; b <= r.beds; b++) {
+              const m = members.find((x) => x.bed === b);
+              if (m) {
+                const st = STATUS_MAP[m.status] || STATUS_MAP['入住'];
+                bedsHtml += `<div class="bed" title="${m.name} | ${m.gender} ${m.age}岁 | ${m.status}${m.note ? ' | ' + m.note : ''}">
+            <span class="dot ${st.cls}"></span>
+            <span class="bno">${b}床</span>
+            <span class="bname">${m.name}</span>
+            <span class="bst">${m.status}</span>
+          </div>`;
+              } else {
+                bedsHtml += `<div class="bed" title="空闲床位">
+            <span class="dot free"></span>
+            <span class="bno">${b}床</span>
+            <span class="bname" style="color:var(--text-muted)">空闲</span>
+            <span class="bst">空闲</span>
+          </div>`;
+              }
+            }
+          } else {
+            bedsHtml = `<div class="bed" style="color:var(--text-muted)"><span class="bname">无床位</span></div>`;
+          }
+
+          const nurseHtml = r.nurse
+            ? `<span class="rnurse" title="护理人员：${r.nurse}">${r.nurse}</span>`
+            : `<span class="rnurse none" title="未分配护理人员">未分配</span>`;
+
+          el.innerHTML = `
+      <div class="room-head">
+        <span class="rname">${r.name || r.no}<span class="rcount">${occupied}/${r.beds}</span></span>
+        ${nurseHtml}
+      </div>
+      <div class="beds">
+        ${bedsHtml}
+      </div>
+    `;
+          canvas.appendChild(el);
+        });
+      }
+
+      /* 右侧：护理人员看护统计（统计每位护理人员在当前楼层负责多少间寝室） */
+      function renderNurseStats() {
+        const floor = DATA.floors.find((f) => f.id === currentFloor);
+        const sub = document.getElementById('nurseStatSub');
+        if (sub) sub.textContent = floor ? floor.name || floor.id : '';
+
+        const counts = {};
+        getFloorRooms(currentFloor).forEach((r) => {
+          const n = r.nurse || '未分配';
+          counts[n] = (counts[n] || 0) + 1;
+        });
+        const entries = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'));
+
+        const list = document.getElementById('nurseStatList');
+        if (entries.length === 0) {
+          list.innerHTML =
+            '<div style="color:var(--text-muted);text-align:center;padding:14px;font-size:12px">暂无护理人员分配</div>';
+          return;
+        }
+        const totalRooms = entries.reduce((s, e) => s + e[1], 0);
+        list.innerHTML = entries
+          .map(([name, cnt]) => {
+            const unassigned = name === '未分配';
+            const color = unassigned ? '#7d93b8' : '#ffd54f';
+            return `
+    <div class="nurse-stat-item" title="${name} 看护 ${cnt} 间（占该层 ${((cnt / totalRooms) * 100).toFixed(0)}%）">
+      <span class="ns-name${unassigned ? ' ns-name-muted' : ''}">${name}</span>
+      <span class="ns-val" style="color:${color}">${cnt}<span class="ns-unit">间</span></span>
+    </div>`;
+          })
+          .join('');
+      }
+
+      function renderLegend() {
+        const members = getFloorMembers(currentFloor);
+        const rooms = getFloorRooms(currentFloor);
+        const totalBeds = rooms.reduce((s, r) => s + r.beds, 0);
+
+        const floor = DATA.floors.find((f) => f.id === currentFloor);
+        const sub = document.getElementById('statusSub');
+        if (sub) sub.textContent = floor ? floor.name || floor.id : '';
+
+        const counts = { 入住: 0, 空闲: 0, 住院: 0, 请假: 0 };
+        members.forEach((m) => {
+          if (counts[m.status] !== undefined) counts[m.status]++;
+        });
+        counts['空闲'] = Math.max(0, totalBeds - members.length);
+
+        const total = totalBeds || 1;
+
+        const list = document.getElementById('legendList');
+        list.innerHTML = STATUS_CONFIG.map(
+          (s) => `
+    <div class="legend-item">
+      <span class="dot ${s.cls}"></span>
+      <span class="lg-name">${s.label}</span>
+      <span class="lg-count" style="color:${s.color}">${counts[s.key]}</span>
+    </div>
+  `,
+        ).join('');
+
+        const bar = document.getElementById('statusBar');
+        bar.innerHTML = STATUS_CONFIG.map(
+          (s) =>
+            `<div style="width:${((counts[s.key] / total) * 100).toFixed(1)}%;background:${s.color}" title="${s.label}: ${counts[s.key]}"></div>`,
+        ).join('');
+      }
+
+      function render() {
+        renderFloorTabs();
+        renderStats(); // 全表汇总（不随楼层变）
+        renderFloorStats(); // 当前楼层统计
+        renderNurseFilter(); // 当前楼层护理人员筛选条
+        renderFloor(); // 当前楼层寝室（按护理人员筛选）
+        renderLegend(); // 当前楼层状态分布
+        renderNurseStats(); // 护理人员看护寝室统计
+      }
+    </script>
   </body>
 </html>
