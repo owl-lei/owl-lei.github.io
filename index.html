@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>阳春市福颐康乐养老中心床位智慧大屏</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
       :root {
         --bg-0: #050b1a;
@@ -495,6 +494,32 @@
         flex-direction: column;
         gap: 10px;
       }
+
+      /* 护理人员看护统计：面板占满剩余空间，人数多时列表内部滚动 */
+      .panel-grow {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #nurseStatList {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 4px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(64, 158, 255, 0.35) transparent;
+      }
+      #nurseStatList::-webkit-scrollbar {
+        width: 6px;
+      }
+      #nurseStatList::-webkit-scrollbar-thumb {
+        background: rgba(64, 158, 255, 0.35);
+        border-radius: 3px;
+      }
+      #nurseStatList::-webkit-scrollbar-track {
+        background: transparent;
+      }
       .legend-item {
         display: flex;
         align-items: center;
@@ -609,21 +634,154 @@
           grid-template-columns: repeat(3, 1fr);
         }
       }
+
+      /* ---- 密码验证弹窗 ---- */
+      .pwd-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 11, 26, 0.92);
+        backdrop-filter: blur(6px);
+      }
+      .pwd-mask.hidden {
+        display: none;
+      }
+      .pwd-box {
+        width: 340px;
+        padding: 32px 28px 26px;
+        background: var(--bg-1);
+        border: 1px solid rgba(64, 158, 255, 0.35);
+        border-radius: 12px;
+        box-shadow: 0 0 40px rgba(0, 120, 255, 0.15);
+        text-align: center;
+      }
+      .pwd-box .pwd-logo {
+        font-size: 34px;
+        margin-bottom: 10px;
+      }
+      .pwd-box h2 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        color: #dce8ff;
+        letter-spacing: 2px;
+      }
+      .pwd-box .pwd-tip {
+        font-size: 12px;
+        color: var(--text-muted, #7a8db5);
+        margin-bottom: 18px;
+      }
+      .pwd-box input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        font-size: 15px;
+        color: #dce8ff;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(64, 158, 255, 0.35);
+        border-radius: 8px;
+        outline: none;
+        text-align: center;
+        letter-spacing: 2px;
+      }
+      .pwd-box input:focus {
+        border-color: #409eff;
+        box-shadow: 0 0 8px rgba(64, 158, 255, 0.35);
+      }
+      .pwd-box .pwd-err {
+        height: 18px;
+        margin: 8px 0 2px;
+        font-size: 12px;
+        color: #ff5b5b;
+        visibility: hidden;
+      }
+      .pwd-box .pwd-err.show {
+        visibility: visible;
+      }
+      .pwd-box button {
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px 0;
+        font-size: 15px;
+        letter-spacing: 4px;
+        color: #fff;
+        background: linear-gradient(135deg, #1677ff, #409eff);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .pwd-box button:hover {
+        filter: brightness(1.12);
+      }
+      .pwd-box button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .pwd-box input[type='checkbox'] {
+        width: auto;
+        padding: 0;
+        margin: 0;
+        accent-color: #409eff;
+      }
+      .pwd-remember {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--text-muted, #7a8db5);
+        cursor: pointer;
+        user-select: none;
+      }
+      .pwd-box.shake {
+        animation: pwd-shake 0.4s;
+      }
+      @keyframes pwd-shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-8px);
+        }
+        50% {
+          transform: translateX(8px);
+        }
+        75% {
+          transform: translateX(-5px);
+        }
+      }
     </style>
   </head>
   <body>
+    <!-- 访问密码弹窗：校验通过后才加载数据 -->
+    <div class="pwd-mask" id="pwdMask">
+      <div class="pwd-box" id="pwdBox">
+        <div class="pwd-logo">🔐</div>
+        <h2>访问验证</h2>
+        <div class="pwd-tip">阳春市福颐康乐养老中心床位智慧大屏</div>
+        <input type="text" id="accInput" placeholder="请输入账号" autocomplete="off" />
+        <input type="password" id="pwdInput" placeholder="请输入密码" autocomplete="off" style="margin-top: 10px" />
+        <label class="pwd-remember"><input type="checkbox" id="rememberChk" />记住密码（7天内免登录）</label>
+        <div class="pwd-err" id="pwdErr">账号或密码错误，请重试</div>
+        <button id="pwdBtn">进入系统</button>
+      </div>
+    </div>
+
     <div class="app">
       <div class="header">
-        <div class="title-wrap" id="titleArea" title="点击加载Excel数据" style="cursor: pointer">
+        <div class="title-wrap" id="titleArea" title="点击刷新数据" style="cursor: pointer">
           <div class="logo">福</div>
           <div>
             <div class="title">阳春市福颐康乐养老中心床位智慧大屏</div>
-            <div class="subtitle">YANGCHUN FUYI KANGLE NURSING CENTER BED MONITORING</div>
+            <div class="subtitle">YANGCHUN FUYI KANGLE NURSING CENTER BED MONITORING · VIKA</div>
           </div>
         </div>
         <div class="header-right">
           <div class="clock" id="clock">--:--:--</div>
-          <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none" />
         </div>
       </div>
 
@@ -635,6 +793,8 @@
           <div class="floor-tabs" id="floorTabs"></div>
           <!-- 护理人员条件筛选（默认全部），位于楼层平面图上方 -->
           <div class="nurse-bar" id="nurseBar"></div>
+          <!-- 状态条件筛选（默认全部），位于护理人员筛选下方 -->
+          <div class="nurse-bar" id="statusFilterBar"></div>
           <div class="floor-canvas-wrap">
             <div class="floor-canvas" id="floorCanvas"></div>
           </div>
@@ -659,7 +819,7 @@
             <div class="status-bar" id="statusBar"></div>
           </div>
 
-          <div class="panel">
+          <div class="panel panel-grow">
             <div class="panel-title">
               护理人员看护统计
               <span class="panel-sub" id="nurseStatSub">--</span>
@@ -686,8 +846,10 @@
       const STATUS_MAP = Object.fromEntries(STATUS_CONFIG.map((s) => [s.key, s]));
 
       let DATA = { floors: [], rooms: [], members: [], nurses: [] };
+      const ALL_FLOOR = '__ALLFLOOR__'; // 楼层「全部」选项值
       let currentFloor = null;
       let currentNurse = '__ALL__'; // 当前筛选的护理人员，__ALL__ 为全部
+      let currentStatus = '__ALL__'; // 当前筛选的状态，__ALL__ 为全部
 
       /* ============================================================
        *  Clock
@@ -714,149 +876,414 @@
       }
 
       /* ============================================================
-       *  Excel loading
-       *  方案二：通过 data.json 索引文件指向最新 xlsx，支持自动检测更新
+       *  Vika data loading (v2)
+       *  从维格表 API 实时读取：楼层 / 寝室 / 护理人员 / 成员
        * ============================================================ */
-      function parseWorkbook(wb) {
-        const getSheet = (name) => {
-          const sn = wb.SheetNames.find((n) => n === name);
-          if (!sn) return [];
-          return XLSX.utils.sheet_to_json(wb.Sheets[sn], { defval: '' });
-        };
-        const floors = getSheet('楼层')
-          .map((r) => ({
-            id: String(r['楼层编号'] ?? r['楼层'] ?? '').trim(),
-            name: String(r['楼层名称'] ?? r['名称'] ?? '').trim(),
-            desc: String(r['楼层说明'] ?? r['说明'] ?? '').trim(),
-          }))
-          .filter((f) => f.id);
+      const VIKA_TOKEN = 'uskSHFVWmChwNjJ8gChAHPL';
+      const VIKA_TABLES = {
+        floors: { dst: 'dstBkEGEBGKcLTvqKy', view: 'viwZC0LiAtkoj' }, // 楼层表
+        rooms: { dst: 'dsto9jiPmQFbiR3oST', view: 'viwPQFDWvyU0Q' }, // 寝室表
+        nurses: { dst: 'dstQRNrGtJB2Nlhkzk', view: 'viwnZoYyfRGFY' }, // 护理人员表
+        members: { dst: 'dstE5HsrwYXQXzVcjZ', view: 'viwsf4HovBWPE' }, // 成员表
+      };
+      const VIKA_ACCOUNTS = { dst: 'dstdusJ7NHAuorz5Ka', view: 'viwFiH2qX5S6c' }; // 账号表
+      const AUTH_KEY = 'vika_auth';
+      const REMEMBER_DAYS = 7;
+      // 拉取单张表全部记录（自动分页）
+      const VIKA_PAGE_SIZE = 500; // 每页请求条数（Vika 上限 1000）
+      async function fetchAllRecords({ dst, view }) {
+        const all = [];
+        let page = 1;
+        while (true) {
+          const url = `https://api.vika.cn/fusion/v1/datasheets/${dst}/records?viewId=${view}&fieldKey=name&pageSize=${VIKA_PAGE_SIZE}&pageNum=${page}`;
+          const res = await fetch(url, { headers: { Authorization: 'Bearer ' + VIKA_TOKEN } });
+          const json = await res.json();
+          if (json.code !== 200) throw new Error(json.message || 'Vika API error');
+          const records = json.data.records || [];
+          all.push(...records);
+          // 停止条件：已收集的记录数达到 total，或本页返回空（防御死循环）
+          if (all.length >= json.data.total || records.length === 0) break;
+          page++;
+        }
+        return all;
+      }
 
-        const rooms = getSheet('寝室')
-          .map((r) => ({
-            floor: String(r['楼层'] ?? '').trim(),
-            no: String(r['寝室编号'] ?? r['房间号'] ?? '').trim(),
-            name: String(r['寝室名称'] ?? r['名称'] ?? r['寝室编号'] ?? '').trim(),
-            beds: Number(r['床位数'] ?? 0) || 0,
-            nurse: String(r['护理人员'] ?? '').trim(),
-          }))
-          .filter((r) => r.floor && r.no);
+      const firstLink = (v) => (Array.isArray(v) && v.length ? v[0] : '');
+      const txt = (v) => String(v ?? '').trim();
+      const num = (v) => parseInt(v, 10) || 0;
 
-        const nurses = getSheet('护理人员')
+      // Vika 记录 -> 页面 DATA 结构（与 Excel 版保持一致）
+      function buildData(floorRecs, roomRecs, nurseRecs, memberRecs) {
+        // recordId -> 楼层 {id, name}
+        const floorMap = {};
+        floorRecs.forEach((r) => {
+          floorMap[r.recordId] = { id: txt(r.fields['楼层编号']), name: txt(r.fields['楼层名称']) };
+        });
+        // recordId -> 护理人员姓名
+        const nurseMap = {};
+        nurseRecs.forEach((r) => {
+          nurseMap[r.recordId] = txt(r.fields['姓名']);
+        });
+
+        const floors = floorRecs
+          .map((r) => floorMap[r.recordId])
+          .filter((f) => f.id)
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+        const nurses = nurseRecs
           .map((r) => ({
-            id: String(r['工号'] ?? '').trim(),
-            name: String(r['姓名'] ?? '').trim(),
-            gender: String(r['性别'] ?? '').trim(),
-            phone: String(r['电话'] ?? '').trim(),
-            note: String(r['备注'] ?? '').trim(),
+            id: txt(r.fields['工号']),
+            name: txt(r.fields['姓名']),
+            gender: txt(r.fields['性别']),
+            phone: txt(r.fields['电话']),
+            note: txt(r.fields['备注']),
           }))
           .filter((n) => n.name);
 
-        const members = getSheet('成员')
-          .map((r) => ({
-            floor: String(r['楼层'] ?? '').trim(),
-            room: String(r['寝室编号'] ?? r['房间号'] ?? '').trim(),
-            bed: Number(r['床位号'] ?? r['床位'] ?? 0) || 0,
-            name: String(r['姓名'] ?? '').trim(),
-            gender: String(r['性别'] ?? '').trim(),
-            age: Number(r['年龄'] ?? 0) || 0,
-            status: String(r['状态'] ?? '入住').trim() || '入住',
-            note: String(r['备注'] ?? '').trim(),
-          }))
-          .filter((m) => m.floor && m.room && m.name);
+        // 寝室：楼层/护理人员为关联字段（recordId），映射回文本
+        const roomMap = {}; // recordId -> room
+        const rooms = [];
+        roomRecs.forEach((r) => {
+          const f = r.fields;
+          const floorRec = firstLink(f['楼层']);
+          // 注意：Vika 寝室表中该字段名带尾随空格
+          const nurseRec = firstLink(f['护理人员 '] ?? f['护理人员']);
+          const room = {
+            floor: floorRec && floorMap[floorRec] ? floorMap[floorRec].id : '',
+            no: txt(f['寝室编号']),
+            name: txt(f['寝室名称']) || txt(f['寝室编号']),
+            beds: num(f['床位数']),
+            nurse: nurseRec ? nurseMap[nurseRec] || '' : '',
+          };
+          roomMap[r.recordId] = room;
+          if (room.floor && room.no) rooms.push(room);
+        });
+        rooms.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+        // 成员：寝室为关联字段，楼层通过寝室间接得到
+        const members = [];
+        memberRecs.forEach((r) => {
+          const f = r.fields;
+          const name = txt(f['姓名']);
+          const room = roomMap[firstLink(f['寝室'])];
+          if (!name || !room || !room.floor || !room.no) return;
+          members.push({
+            floor: room.floor,
+            room: room.no,
+            bed: num(f['床位号']),
+            name,
+            gender: txt(f['性别']),
+            age: num(f['年龄']),
+            status: txt(f['状态']) || '入住',
+            note: txt(f['备注']),
+          });
+        });
 
         return { floors, rooms, members, nurses };
       }
 
-      function loadFromArrayBuffer(buf) {
-        const wb = XLSX.read(buf, { type: 'array' });
-        DATA = parseWorkbook(wb);
-        if (DATA.floors.length === 0) {
-          toast('未读取到楼层数据');
+      let isFirstLoad = true;
+      async function loadFromVika(silent) {
+        try {
+          const [floorRecs, roomRecs, nurseRecs, memberRecs] = await Promise.all(
+            [VIKA_TABLES.floors, VIKA_TABLES.rooms, VIKA_TABLES.nurses, VIKA_TABLES.members].map(fetchAllRecords),
+          );
+          DATA = buildData(floorRecs, roomRecs, nurseRecs, memberRecs);
+          if (DATA.floors.length === 0) {
+            if (!silent) toast('未读取到楼层数据');
+            return;
+          }
+          if (isFirstLoad) {
+            currentFloor = DATA.floors[0].id;
+            currentNurse = '__ALL__';
+            isFirstLoad = false;
+          } else if (currentFloor !== ALL_FLOOR && !DATA.floors.some((f) => f.id === currentFloor)) {
+            // 刷新时若当前楼层已不存在，回退到第一层
+            currentFloor = DATA.floors[0].id;
+            currentNurse = '__ALL__';
+          }
+          render();
+          if (!silent)
+            toast(`数据加载成功：${DATA.floors.length}层 / ${DATA.rooms.length}间 / ${DATA.members.length}人`);
+        } catch (e) {
+          console.error('[Vika] 加载失败:', e);
+          if (isFirstLoad) {
+            document.getElementById('floorCanvas').innerHTML = '<div class="empty">数据加载失败，点击标题重试</div>';
+          }
+          if (!silent) toast('数据加载失败：' + e.message);
+        }
+      }
+
+      /* ============================================================
+       *  账号验证：从 Vika 账号表读取账号 + MD5密码 校验
+       *  记住密码：勾选后 7 天内免登录（localStorage），否则仅本次会话（sessionStorage）
+       * ============================================================ */
+      // 轻量 MD5（用于与账号表中的密码摘要比对）
+      function md5(str) {
+        function rotl(x, c) {
+          return (x << c) | (x >>> (32 - c));
+        }
+        const bytes = [];
+        for (let i = 0; i < str.length; i++) {
+          const c = str.charCodeAt(i);
+          if (c < 0x80) bytes.push(c);
+          else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+          else bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+        }
+        const bitLen = bytes.length * 8;
+        bytes.push(0x80);
+        while (bytes.length % 64 !== 56) bytes.push(0);
+        for (let i = 0; i < 8; i++) bytes.push(Math.floor(bitLen / 2 ** (8 * i)) & 0xff);
+        const S = [
+          7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9,
+          14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15,
+          21, 6, 10, 15, 21,
+        ];
+        const K = [];
+        for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296);
+        let a0 = 0x67452301,
+          b0 = 0xefcdab89,
+          c0 = 0x98badcfe,
+          d0 = 0x10325476;
+        for (let off = 0; off < bytes.length; off += 64) {
+          const M = [];
+          for (let j = 0; j < 16; j++)
+            M[j] =
+              bytes[off + j * 4] |
+              (bytes[off + j * 4 + 1] << 8) |
+              (bytes[off + j * 4 + 2] << 16) |
+              (bytes[off + j * 4 + 3] << 24) |
+              0;
+          let A = a0,
+            B = b0,
+            C = c0,
+            D = d0;
+          for (let i = 0; i < 64; i++) {
+            let F, g;
+            if (i < 16) {
+              F = (B & C) | (~B & D);
+              g = i;
+            } else if (i < 32) {
+              F = (D & B) | (~D & C);
+              g = (5 * i + 1) % 16;
+            } else if (i < 48) {
+              F = B ^ C ^ D;
+              g = (3 * i + 5) % 16;
+            } else {
+              F = C ^ (B | ~D);
+              g = (7 * i) % 16;
+            }
+            const tmp = D;
+            D = C;
+            C = B;
+            B = (B + rotl((A + F + K[i] + M[g]) | 0, S[i])) | 0;
+            A = tmp;
+          }
+          a0 = (a0 + A) | 0;
+          b0 = (b0 + B) | 0;
+          c0 = (c0 + C) | 0;
+          d0 = (d0 + D) | 0;
+        }
+        const hex = (n) => {
+          let s = '';
+          for (let i = 0; i < 4; i++) s += ('0' + ((n >>> (8 * i)) & 0xff).toString(16)).slice(-2);
+          return s;
+        };
+        return hex(a0) + hex(b0) + hex(c0) + hex(d0);
+      }
+
+      let unlocked = false; // 校验通过后为 true
+
+      // 校验账号：filterByFormula 按账号精确过滤（只拉 1 条），再比对密码 MD5
+      async function validateAccount(acc, pwdHash) {
+        const safeAcc = String(acc).replace(/"/g, '\\"'); // 防引号注入公式
+        const formula = encodeURIComponent(`{账号}="${safeAcc}"`);
+        const url = `https://api.vika.cn/fusion/v1/datasheets/${VIKA_ACCOUNTS.dst}/records?viewId=${VIKA_ACCOUNTS.view}&fieldKey=name&filterByFormula=${formula}&pageSize=1`;
+        const res = await fetch(url, { headers: { Authorization: 'Bearer ' + VIKA_TOKEN } });
+        const json = await res.json();
+        if (json.code !== 200) throw new Error(json.message || 'Vika API error');
+        const rec = (json.data.records || [])[0];
+        if (!rec) return false; // 账号不存在
+        return String((rec.fields || {})['密码'] || '').toLowerCase() === pwdHash.toLowerCase();
+      }
+
+      // 操作日志：登录成功后静默写入日志表（失败不影响主流程）
+      function logLogin(acc) {
+        fetch('https://api.vika.cn/fusion/v1/datasheets/dstHNa9upRKXQFjL5b/records', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + VIKA_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            records: [
+              {
+                fields: {
+                  账号: acc,
+                  操作表单: '床位智慧大屏',
+                  操作类型: '用户登录',
+                  操作时间: Date.now(),
+                },
+              },
+            ],
+          }),
+        }).catch(() => {});
+      }
+
+      function saveAuth(account, hash, remember) {
+        const exp = Date.now() + REMEMBER_DAYS * 86400000;
+        const payload = JSON.stringify({ account, hash, expire: exp });
+        const adminPayload = JSON.stringify({ acc: account, hash, expires: exp }); // 兼容 admin.html
+        if (remember) {
+          localStorage.setItem(AUTH_KEY, payload);
+          localStorage.setItem('vika_admin_auth', adminPayload);
+          sessionStorage.removeItem(AUTH_KEY);
+          sessionStorage.removeItem('vika_admin_session');
+        } else {
+          sessionStorage.setItem(AUTH_KEY, payload);
+          sessionStorage.setItem('vika_admin_session', adminPayload);
+          localStorage.removeItem(AUTH_KEY);
+          localStorage.removeItem('vika_admin_auth');
+        }
+      }
+      function loadAuth() {
+        // 跨页免登录：同时识别本页与 admin.html 的登录态格式
+        const candidates = [
+          { store: localStorage, key: AUTH_KEY },
+          { store: sessionStorage, key: AUTH_KEY },
+          { store: localStorage, key: 'vika_admin_auth' },
+          { store: sessionStorage, key: 'vika_admin_session' },
+        ];
+        for (const { store, key } of candidates) {
+          try {
+            const raw = store.getItem(key);
+            if (!raw) continue;
+            const o = JSON.parse(raw);
+            const account = o.account || o.acc;
+            const expire = o.expire || o.expires;
+            if (account && o.hash && expire > Date.now()) return { account, hash: o.hash, expire };
+            store.removeItem(key); // 过期清理
+          } catch (e) {
+            /* 忽略损坏数据 */
+          }
+        }
+        return null;
+      }
+      function clearAuth() {
+        localStorage.removeItem(AUTH_KEY);
+        localStorage.removeItem('vika_admin_auth');
+        sessionStorage.removeItem(AUTH_KEY);
+        sessionStorage.removeItem('vika_admin_session');
+      }
+
+      function enterSystem() {
+        unlocked = true;
+        document.getElementById('pwdMask').classList.add('hidden');
+        loadFromVika(false); // 校验通过，开始加载数据
+      }
+
+      function showAuthError(msg) {
+        const err = document.getElementById('pwdErr');
+        err.textContent = msg;
+        err.classList.add('show');
+        const box = document.getElementById('pwdBox');
+        box.classList.remove('shake');
+        void box.offsetWidth; // 重启动画
+        box.classList.add('shake');
+      }
+
+      async function checkPassword() {
+        const acc = document.getElementById('accInput').value.trim();
+        const pwd = document.getElementById('pwdInput').value;
+        const remember = document.getElementById('rememberChk').checked;
+        if (!acc || !pwd) {
+          showAuthError('请输入账号和密码');
           return;
         }
-        currentFloor = DATA.floors[0].id;
-        currentNurse = '__ALL__';
-        render();
-        toast(`数据加载成功：${DATA.floors.length}层 / ${DATA.rooms.length}间 / ${DATA.members.length}人`);
+        const btn = document.getElementById('pwdBtn');
+        btn.disabled = true;
+        btn.textContent = '验证中…';
+        try {
+          const hash = md5(pwd);
+          if (await validateAccount(acc, hash)) {
+            saveAuth(acc, hash, remember);
+            enterSystem();
+            logLogin(acc);
+          } else {
+            clearAuth();
+            showAuthError('账号或密码错误，请重试');
+            document.getElementById('pwdInput').value = '';
+            document.getElementById('pwdInput').focus();
+          }
+        } catch (e) {
+          showAuthError('网络异常，无法连接验证服务');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '进入系统';
+        }
       }
 
-      /* ---- 方案二：data.json 索引 + 自动检测更新 ---- */
-      let currentDataFile = null; // 当前已加载的 xlsx 文件名
-      const POLL_INTERVAL = 60000; // 轮询间隔（60 秒）
-
-      // 带时间戳绕过浏览器缓存，确保每次都从服务器拿最新的 data.json
-      function fetchIndex() {
-        return fetch('data.json?t=' + Date.now()).then((r) => (r.ok ? r.json() : Promise.reject('index fetch failed')));
-      }
-
-      // 从 data.json 读取最新文件名并加载
-      function loadFromIndex() {
-        return fetchIndex().then((idx) => {
-          const file = String(idx.file || '').trim();
-          if (!file) throw new Error('data.json 中未指定 file 字段');
-          // 文件名未变化时跳过，避免重复加载
-          if (currentDataFile === file) return;
-
-          // 加载对应的 xlsx（加时间戳绕过缓存）
-          return fetch(file + '?t=' + Date.now())
-            .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject('xlsx fetch failed: ' + file)))
-            .then((buf) => {
-              loadFromArrayBuffer(buf);
-              currentDataFile = file;
-              if (idx.updated) {
-                console.log('[数据] 已加载:', file, '更新时间:', idx.updated);
-              }
-            });
-        });
-      }
-
-      // 定时轮询：发现 data.json 指向的文件变化则自动重新加载
-      // setInterval(() => {
-      //   fetchIndex()
-      //     .then(idx => {
-      //       const file = String(idx.file || '').trim();
-      //       if (file && file !== currentDataFile) {
-      //         toast('检测到数据更新，正在重新加载…');
-      //         loadFromIndex();
-      //       }
-      //     })
-      //     .catch(() => { /* 静默忽略轮询失败，等待下一次 */ });
-      // }, POLL_INTERVAL);
-
-      // 点击标题手动导入（兜底）
-      document.getElementById('titleArea').addEventListener('click', () => {
-        document.getElementById('fileInput').click();
+      document.getElementById('pwdBtn').addEventListener('click', checkPassword);
+      document.getElementById('pwdInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') checkPassword();
+      });
+      document.getElementById('accInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') checkPassword();
       });
 
-      document.getElementById('fileInput').addEventListener('change', (e) => {
-        const f = e.target.files[0];
-        if (!f) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => loadFromArrayBuffer(ev.target.result);
-        reader.readAsArrayBuffer(f);
-      });
+      // 已保存的有效登录：静默复核账号仍有效后直接进入；网络异常时宽限进入（大屏场景）
+      (async function autoLogin() {
+        const auth = loadAuth();
+        if (!auth) {
+          document.getElementById('accInput').focus();
+          return;
+        }
+        try {
+          if (await validateAccount(auth.account, auth.hash)) return enterSystem();
+          clearAuth(); // 账号被删除或密码已改，重新登录
+          document.getElementById('accInput').focus();
+        } catch (e) {
+          enterSystem(); // 离线宽限
+        }
+      })();
 
-      // 启动：先读 data.json 索引，再加载对应 xlsx；失败则降级提示
-      loadFromIndex().catch(() => {
-        document.getElementById('floorCanvas').innerHTML = '<div class="empty">暂无数据</div>';
-      });
+      // 点击标题手动刷新（仅密码校验通过后生效）
+      // document.getElementById('titleArea').addEventListener('click', () => {
+      //   if (!unlocked) return;
+      //   toast('正在刷新数据…');
+      //   loadFromVika(false);
+      // });
 
       /* ============================================================
        *  Rendering
        * ============================================================ */
       function getFloorRooms(floorId) {
-        return DATA.rooms.filter((r) => r.floor === floorId);
+        return floorId === ALL_FLOOR ? DATA.rooms : DATA.rooms.filter((r) => r.floor === floorId);
       }
       function getRoomMembers(floorId, roomNo) {
         return DATA.members.filter((m) => m.floor === floorId && m.room === roomNo).sort((a, b) => a.bed - b.bed);
       }
       function getFloorMembers(floorId) {
-        return DATA.members.filter((m) => m.floor === floorId);
+        return floorId === ALL_FLOOR ? DATA.members : DATA.members.filter((m) => m.floor === floorId);
+      }
+
+      /* 当前楼层显示名（用于面板标题右侧标注） */
+      function currentFloorName() {
+        if (currentFloor === ALL_FLOOR) return '全部楼层';
+        const f = DATA.floors.find((f) => f.id === currentFloor);
+        return f ? f.name || f.id : '';
       }
 
       function renderFloorTabs() {
         const box = document.getElementById('floorTabs');
         box.innerHTML = '';
+        // 「全部」放在第一位，默认选中第二个选项（第一个实际楼层）
+        const allTab = document.createElement('div');
+        allTab.className = 'floor-tab' + (currentFloor === ALL_FLOOR ? ' active' : '');
+        allTab.innerHTML = `<span class="tab-name">全部</span><span class="tab-desc">所有楼层</span>`;
+        allTab.onclick = () => {
+          currentFloor = ALL_FLOOR;
+          currentNurse = '__ALL__';
+          render();
+        };
+        box.appendChild(allTab);
         DATA.floors.forEach((f) => {
           const tab = document.createElement('div');
           tab.className = 'floor-tab' + (f.id === currentFloor ? ' active' : '');
@@ -903,6 +1330,26 @@
         });
       }
 
+      /* 状态筛选条（护理人员筛选下方）：全部/入住/请假/住院/空闲，默认全部 */
+      function renderStatusFilter() {
+        const box = document.getElementById('statusFilterBar');
+        const opts = ['__ALL__', '入住', '请假', '住院', '空闲'];
+        box.innerHTML =
+          '<span class="nurse-bar-label">状态</span>' +
+          opts
+            .map(
+              (v) =>
+                `<span class="nurse-chip${currentStatus === v ? ' active' : ''}" data-status="${v}">${v === '__ALL__' ? '全部' : v}</span>`,
+            )
+            .join('');
+        box.querySelectorAll('.nurse-chip').forEach((chip) => {
+          chip.onclick = () => {
+            currentStatus = chip.dataset.status;
+            render();
+          };
+        });
+      }
+
       /* v3: 顶部统计 = 全表汇总（所有楼层，不随楼层切换变化） */
       function renderStats() {
         const members = DATA.members;
@@ -943,9 +1390,8 @@
       function renderFloorStats() {
         const rooms = getFloorRooms(currentFloor);
         const totalBeds = rooms.reduce((s, r) => s + r.beds, 0);
-        const floor = DATA.floors.find((f) => f.id === currentFloor);
         const sub = document.getElementById('floorStatSub');
-        if (sub) sub.textContent = floor ? floor.name || floor.id : '';
+        if (sub) sub.textContent = currentFloorName();
 
         const items = [
           { icon: '🏠', name: '寝室总数', val: rooms.length, color: '#3a9bff' },
@@ -972,29 +1418,44 @@
         let rooms = getFloorRooms(currentFloor);
         if (currentNurse !== '__ALL__') rooms = rooms.filter((r) => r.nurse === currentNurse);
 
+        // 自适应网格，无需设置行/列，由 CSS auto-fill 自动排列
+        canvas.style.gridTemplateColumns = '';
+        canvas.innerHTML = '';
+
         if (rooms.length === 0) {
           canvas.innerHTML =
             currentNurse !== '__ALL__'
-              ? `<div class="empty">护理人员「${currentNurse}」在当前楼层暂无负责寝室</div>`
-              : '<div class="empty">当前楼层暂无寝室数据</div>';
+              ? `<div class="empty">护理人员「${currentNurse}」在当前范围暂无负责寝室</div>`
+              : '<div class="empty">当前范围暂无寝室数据</div>';
           return;
         }
-        // 自适应网格，无需设置行/列，由 CSS auto-fill 自动排列
-        canvas.style.gridTemplateColumns = '';
 
-        canvas.innerHTML = '';
+        let rendered = 0;
         rooms.forEach((r) => {
-          const members = getRoomMembers(currentFloor, r.no);
+          // 成员按寝室自身的楼层匹配（「全部」楼层时房号可能跨层重复）
+          const members = getRoomMembers(r.floor, r.no);
           const occupied = members.length;
+          const freeCount = Math.max(0, r.beds - members.length);
+
+          // 状态筛选：空闲=只看空床位；入住/请假/住院=只看该状态成员（不显示空床）
+          let showMembers = members;
+          let showFree = freeCount;
+          if (currentStatus === '空闲') {
+            showMembers = [];
+          } else if (currentStatus !== '__ALL__') {
+            showMembers = members.filter((m) => m.status === currentStatus);
+            showFree = 0;
+          }
+          // 状态筛选下该寝室无匹配床位 → 跳过不显示
+          if (currentStatus !== '__ALL__' && showMembers.length + showFree === 0) return;
+
           const el = document.createElement('div');
           el.className = 'room';
 
           let bedsHtml = '';
           if (r.beds > 0) {
-            // 按该房间实际成员床位号排序展示（支持全局编号或房间内编号两种格式）
-            const roomMembers = members.slice().sort((a, b) => a.bed - b.bed);
-            // 先展示所有有成员的床位（用成员的实际床位号）
-            roomMembers.forEach((m) => {
+            // 先展示筛选后的成员床位（getRoomMembers 已按床位号排序）
+            showMembers.forEach((m) => {
               const st = STATUS_MAP[m.status] || STATUS_MAP['入住'];
               bedsHtml += `<div class="bed" title="${m.name} | ${m.gender} ${m.age}岁 | ${m.status}${m.note ? ' | ' + m.note : ''}">
             <span class="dot ${st.cls}"></span>
@@ -1003,9 +1464,8 @@
             <span class="bst">${m.status}</span>
           </div>`;
             });
-            // 再按 r.beds 补足空闲床位（数量 = 床位数 - 实际成员数）
-            const freeCount = Math.max(0, r.beds - roomMembers.length);
-            for (let i = 0; i < freeCount; i++) {
+            // 补足空闲床位
+            for (let i = 0; i < showFree; i++) {
               bedsHtml += `<div class="bed" title="空闲床位">
             <span class="dot free"></span>
             <span class="bname" style="color:var(--text-muted)">空闲床位</span>
@@ -1030,14 +1490,19 @@
       </div>
     `;
           canvas.appendChild(el);
+          rendered++;
         });
+
+        // 状态筛选后没有任何匹配
+        if (rendered === 0) {
+          canvas.innerHTML = `<div class="empty">当前筛选条件下暂无状态为「${currentStatus}」的床位</div>`;
+        }
       }
 
       /* 右侧：护理人员看护统计（统计每位护理人员在当前楼层负责多少间寝室） */
       function renderNurseStats() {
-        const floor = DATA.floors.find((f) => f.id === currentFloor);
         const sub = document.getElementById('nurseStatSub');
-        if (sub) sub.textContent = floor ? floor.name || floor.id : '';
+        if (sub) sub.textContent = currentFloorName();
 
         const counts = {};
         getFloorRooms(currentFloor).forEach((r) => {
@@ -1071,9 +1536,8 @@
         const rooms = getFloorRooms(currentFloor);
         const totalBeds = rooms.reduce((s, r) => s + r.beds, 0);
 
-        const floor = DATA.floors.find((f) => f.id === currentFloor);
         const sub = document.getElementById('statusSub');
-        if (sub) sub.textContent = floor ? floor.name || floor.id : '';
+        if (sub) sub.textContent = currentFloorName();
 
         const counts = { 入住: 0, 空闲: 0, 住院: 0, 请假: 0 };
         members.forEach((m) => {
@@ -1106,7 +1570,8 @@
         renderStats(); // 全表汇总（不随楼层变）
         renderFloorStats(); // 当前楼层统计
         renderNurseFilter(); // 当前楼层护理人员筛选条
-        renderFloor(); // 当前楼层寝室（按护理人员筛选）
+        renderStatusFilter(); // 状态筛选条
+        renderFloor(); // 当前楼层寝室（按护理人员+状态筛选）
         renderLegend(); // 当前楼层状态分布
         renderNurseStats(); // 护理人员看护寝室统计
       }
