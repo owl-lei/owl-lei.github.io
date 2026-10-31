@@ -1094,17 +1094,15 @@
 
       let unlocked = false; // 校验通过后为 true
 
-      // 校验账号：filterByFormula 按账号精确过滤（只拉 1 条），再比对密码 MD5
+      // 校验账号：账号 + 密码摘要作为服务端筛选条件，只返回 账号/备注 字段（不回传密码与创建时间）
       async function validateAccount(acc, pwdHash) {
         const safeAcc = String(acc).replace(/"/g, '\\"'); // 防引号注入公式
-        const formula = encodeURIComponent(`{账号}="${safeAcc}"`);
-        const url = `https://api.vika.cn/fusion/v1/datasheets/${VIKA_ACCOUNTS.dst}/records?viewId=${VIKA_ACCOUNTS.view}&fieldKey=name&filterByFormula=${formula}&pageSize=1`;
+        const formula = `AND({账号}="${safeAcc}",{密码}="${String(pwdHash).toLowerCase()}")`;
+        const url = `https://api.vika.cn/fusion/v1/datasheets/${VIKA_ACCOUNTS.dst}/records?viewId=${VIKA_ACCOUNTS.view}&fieldKey=name&fields=${encodeURIComponent('账号,备注')}&filterByFormula=${encodeURIComponent(formula)}&pageSize=1`;
         const res = await fetch(url, { headers: { Authorization: 'Bearer ' + VIKA_TOKEN } });
         const json = await res.json();
         if (json.code !== 200) throw new Error(json.message || 'Vika API error');
-        const rec = (json.data.records || [])[0];
-        if (!rec) return false; // 账号不存在
-        return String((rec.fields || {})['密码'] || '').toLowerCase() === pwdHash.toLowerCase();
+        return (json.data.records || []).length > 0; // 有记录即账号密码匹配
       }
 
       // 操作日志：登录成功后静默写入日志表（失败不影响主流程）
