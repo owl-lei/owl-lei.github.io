@@ -1716,6 +1716,7 @@
             if (ok) {
               currentUser = saved.acc;
               showApp();
+              logOperation('用户登录', '后台管理', null, null); // 免登录进入同样记录
             } else {
               clearAuth();
               showLogin();
@@ -1724,6 +1725,7 @@
           .catch(function () {
             currentUser = saved.acc;
             showApp(); // 断网宽限
+            logOperation('用户登录', '后台管理', null, null); // 免登录进入同样记录
           });
       })();
 

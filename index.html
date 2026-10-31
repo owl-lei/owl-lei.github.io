@@ -1108,7 +1108,9 @@
       }
 
       // 操作日志：登录成功后静默写入日志表（失败不影响主流程）
-      function logLogin(acc) {
+      // attempt 用于 429 限流重试（该空间限流较严，重试避免日志丢失）
+      function logLogin(acc, attempt) {
+        attempt = attempt || 0;
         fetch('https://api.vika.cn/fusion/v1/datasheets/dstHNa9upRKXQFjL5b/records', {
           method: 'POST',
           headers: { Authorization: 'Bearer ' + VIKA_TOKEN, 'Content-Type': 'application/json' },
@@ -1124,7 +1126,14 @@
               },
             ],
           }),
-        }).catch(() => {});
+        })
+          .then((r) => r.json())
+          .then((json) => {
+            if (json.code !== 200 && attempt < 4) setTimeout(() => logLogin(acc, attempt + 1), 1200 * (attempt + 1));
+          })
+          .catch(() => {
+            if (attempt < 4) setTimeout(() => logLogin(acc, attempt + 1), 1200 * (attempt + 1));
+          });
       }
 
       function saveAuth(account, hash, remember) {
@@ -1236,10 +1245,14 @@
           return;
         }
         try {
-          if (await validateAccount(auth.account, auth.hash)) return enterSystem();
+          if (await validateAccount(auth.account, auth.hash)) {
+            logLogin(auth.account); // 免登录进入同样记录
+            return enterSystem();
+          }
           clearAuth(); // 账号被删除或密码已改，重新登录
           document.getElementById('accInput').focus();
         } catch (e) {
+          logLogin(auth.account); // 离线宽限进入同样记录
           enterSystem(); // 离线宽限
         }
       })();
