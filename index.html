@@ -1094,15 +1094,47 @@
 
       let unlocked = false; // 校验通过后为 true
 
-      // 校验账号：账号 + 密码摘要作为服务端筛选条件，只返回 账号/备注 字段（不回传密码与创建时间）
-      async function validateAccount(acc, pwdHash) {
+      // 校验账号：账号 + 密码摘要（+ 设备编号）作为服务端筛选条件，只返回 账号/备注 字段（不回传密码与创建时间）
+      // deviceId 传入时启用设备校验（免登录场景）；命中返回记录（含 recordId），否则 null
+      async function validateAccount(acc, pwdHash, deviceId) {
         const safeAcc = String(acc).replace(/"/g, '\\"'); // 防引号注入公式
-        const formula = `AND({账号}="${safeAcc}",{密码}="${String(pwdHash).toLowerCase()}")`;
-        const url = `https://api.vika.cn/fusion/v1/datasheets/${VIKA_ACCOUNTS.dst}/records?viewId=${VIKA_ACCOUNTS.view}&fieldKey=name&fields=${encodeURIComponent('账号,备注')}&filterByFormula=${encodeURIComponent(formula)}&pageSize=1`;
+        const parts = ['{账号}="' + safeAcc + '"', '{密码}="' + String(pwdHash).toLowerCase() + '"'];
+        if (deviceId) parts.push('{设备编号}="' + String(deviceId).replace(/"/g, '\\"') + '"');
+        const url = `https://api.vika.cn/fusion/v1/datasheets/${VIKA_ACCOUNTS.dst}/records?viewId=${VIKA_ACCOUNTS.view}&fieldKey=name&fields=${encodeURIComponent('账号,备注')}&filterByFormula=${encodeURIComponent('AND(' + parts.join(',') + ')')}&pageSize=1`;
         const res = await fetch(url, { headers: { Authorization: 'Bearer ' + VIKA_TOKEN } });
         const json = await res.json();
         if (json.code !== 200) throw new Error(json.message || 'Vika API error');
-        return (json.data.records || []).length > 0; // 有记录即账号密码匹配
+        return (json.data.records || [])[0] || null;
+      }
+
+      /* 设备绑定：一个账号只允许一台设备免登录 */
+      // 设备编号：首次访问生成 32 位随机 GUID 存入浏览器，同一浏览器两个页面共用
+      function getDeviceId() {
+        const KEY = 'vika_device_id';
+        let id = localStorage.getItem(KEY);
+        if (id && /^[0-9a-f]{32}$/.test(id)) return id;
+        const bytes = new Uint8Array(16);
+        if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+        else for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+        id = Array.from(bytes, (b) => ('0' + b.toString(16)).slice(-2)).join('');
+        localStorage.setItem(KEY, id);
+        return id;
+      }
+      // 登录成功后把当前设备编号写入账号记录（覆盖旧绑定，后登录者得账号；静默重试）
+      function bindDevice(recordId, attempt) {
+        attempt = attempt || 0;
+        fetch(`https://api.vika.cn/fusion/v1/datasheets/${VIKA_ACCOUNTS.dst}/records`, {
+          method: 'PATCH',
+          headers: { Authorization: 'Bearer ' + VIKA_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ records: [{ recordId, fields: { 设备编号: getDeviceId() } }] }),
+        })
+          .then((r) => r.json())
+          .then((json) => {
+            if (json.code !== 200 && attempt < 4) setTimeout(() => bindDevice(recordId, attempt + 1), 1200 * (attempt + 1));
+          })
+          .catch(() => {
+            if (attempt < 4) setTimeout(() => bindDevice(recordId, attempt + 1), 1200 * (attempt + 1));
+          });
       }
 
       // 操作日志：登录成功后静默写入日志表（失败不影响主流程）
@@ -1209,7 +1241,9 @@
         btn.textContent = '验证中…';
         try {
           const hash = md5(pwd);
-          if (await validateAccount(acc, hash)) {
+          const rec = await validateAccount(acc, hash);
+          if (rec) {
+            bindDevice(rec.recordId); // 绑定当前设备（覆盖旧绑定）
             saveAuth(acc, hash, remember);
             enterSystem();
             logLogin(acc);
@@ -1243,7 +1277,8 @@
           return;
         }
         try {
-          if (await validateAccount(auth.account, auth.hash)) {
+          const rec = await validateAccount(auth.account, auth.hash, getDeviceId()); // 免登录需校验设备编号匹配
+          if (rec) {
             logLogin(auth.account); // 免登录进入同样记录
             return enterSystem();
           }
